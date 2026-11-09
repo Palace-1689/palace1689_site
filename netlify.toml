@@ -1,0 +1,11 @@
+# Netlify 自动生成网站的设置。
+# GitHub 仓库有新的提交时，Netlify 会：
+#   1. 安装 requirements.txt 里的套件（自动）
+#   2. 运行下面的 command 生成网站
+#   3. 把 publish 文件夹里的网页发布上线
+[build]
+  command = "python app.py build"
+  publish = "dist"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"

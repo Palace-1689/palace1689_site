@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="{{ lang.code }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{% if page in ['story', 'fans', 'craft', 'news', 'themes', 'contact'] %}<title>{{ menu_labels[page] }} · {{ meta.title }}</title>
+{% elif page == 'masters' %}<title>{{ masters_section.all_title }} · {{ meta.title }}</title>
+{% elif page == 'collections' %}<title>{{ categories_section.all_title }} · {{ meta.title }}</title>
+{% else %}<title>{{ meta.title }}</title>{% endif %}
+<meta name="description" content="{{ meta.description }}">
+{% if site_url %}{% for l in lang_links %}<link rel="alternate" hreflang="{{ l.code }}" href="{{ l.url }}">
+{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ lang_links[0].url }}">
+{% endif %}<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family={{ fonts_query }}&display=swap">
+<link rel="stylesheet" href="{{ static }}css/style.css">
+<style>:root{--f-serif:{{ font_family | safe }}}</style>
+</head>
+<body data-page="{{ page }}" data-active="{{ active }}" data-menu-open="{{ ui.menu_open }}" data-menu-close="{{ ui.menu_close }}" data-jump-to="{{ ui.jump_to }}">
+{# 折扇开场动画：脚本立刻盖上一层，等 main.js 播完再揭开（没有脚本时不出现） #}
+<script>(function(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;var v=document.createElement('div');v.id='fanveil';v.setAttribute('aria-hidden','true');document.body.appendChild(v);document.documentElement.classList.add('veiled');})();</script>
+
+{# ---------- 可重复使用的小模板 ---------- #}
+{% macro backdrop(sec_id) -%}
+  {% set img = backgrounds.get(sec_id) %}
+  {% if img %}<div class="bg has-img" style="background-image:url('{{ static }}images/{{ img }}')"></div>{% endif %}
+{%- endmacro %}
+
+{% macro photo(file, placeholder, alt) -%}
+  <div class="photo">
+    {% if file %}<img src="{{ static }}images/{{ file }}" alt="{{ alt }}" loading="lazy">{% else %}{{ placeholder }}{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro master_card(m) -%}
+  <article class="card">
+    {{ photo(m.photo, ui.photo, m.name) }}
+    {% if m.role %}<span class="role">{{ m.role }}</span>{% endif %}
+    <h3>{{ m.name }}</h3>
+    <p>{{ m.intro }}</p>
+    <div class="actions">
+      <button class="btn btn-ghost" type="button">{{ masters_section.detail_button }}</button>
+      <button class="btn btn-primary" type="button">{{ masters_section.custom_button }} <span class="arr" aria-hidden="true">→</span></button>
+    </div>
+  </article>
+{%- endmacro %}
+
+{% macro category_card(c) -%}
+  <article class="card">
+    {{ photo(c.photo, ui.sample_photo, c.name) }}
+    <h3>{{ c.name }}</h3>
+    <p>{{ c.intro }}</p>
+    <div class="actions"><button class="btn btn-primary" type="button">{{ categories_section.custom_button }} <span class="arr" aria-hidden="true">→</span></button></div>
+  </article>
+{%- endmacro %}
+
+{% macro post_card(item, title, summary, button, placeholder) -%}
+  <article class="post-card">
+    <div class="post-photo">{% if item.photo %}<img src="{{ static }}images/{{ item.photo }}" alt="{{ title }}" loading="lazy">{% else %}<span>{{ placeholder }}</span>{% endif %}</div>
+    <div class="post-body">
+      <h3>{{ title }}</h3>
+      <p>{{ summary }}</p>
+      {% if item.link %}<a class="btn btn-ghost" href="{{ item.link }}">{{ button }} <span class="arr" aria-hidden="true">→</span></a>
+      {% else %}<button class="btn btn-ghost" type="button">{{ button }} <span class="arr" aria-hidden="true">→</span></button>{% endif %}
+    </div>
+  </article>
+{%- endmacro %}
+
+{% macro head(eyebrow, title, link=None, link_text=None) -%}
+  <div class="sec-head{% if link %} with-link{% endif %}">
+    <div class="title"><span class="eyebrow">{{ eyebrow }}</span><h2>{{ title }}</h2></div>
+    {% if link %}<a class="btn btn-ghost btn-sm" href="{{ link }}">{{ link_text }} <span class="arr" aria-hidden="true">→</span></a>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro prose(data) -%}
+  <div class="prose">
+    {% if data.placeholder %}<p class="ph-note">{{ ui.text_placeholder }}</p>{% endif %}
+    {% if data.headline %}<h3 class="prose-headline">{{ data.headline }}</h3>{% endif %}
+    {% if data.motto %}<p class="prose-motto">{{ data.motto }}</p>{% endif %}
+    {% for p in data.paragraphs %}<p>{{ p }}</p>{% endfor %}
+    {% if data.pillars %}<div class="prose-pillars">{% for l in data.pillars %}<p>{{ l }}</p>{% endfor %}</div>{% endif %}
+    {% if data.coda %}<p class="prose-coda">{{ data.coda }}</p>{% endif %}
+    {% if data.closing %}<p class="prose-closing">{{ data.closing }}</p>{% endif %}
+  </div>
+{%- endmacro %}
+
+{% if page != 'home' %}
+<header class="site-head">
+  <div class="head-in">
+    <a class="brand" href="{{ home }}" aria-label="{{ brand.wordmark }} · {{ ui.home }}">
+      <span class="logo-ph">LOGO</span>
+      <span class="wordmark">{{ brand.wordmark }}</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="{{ ui.main_menu }}">
+      {% for item in nav %}
+        {% if item.children %}
+        <div class="nav-group">
+          <a class="nav-link" href="{{ item.href }}" data-sec="{{ item.id }}">{{ item.label }}</a>
+          <button class="sub-toggle" type="button" aria-expanded="false" aria-controls="sub-{{ item.id }}" aria-label="{{ ui.fans_menu }}">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+          <div class="submenu" id="sub-{{ item.id }}">
+            {% for c in item.children %}<a href="{{ c.href }}" data-sec="{{ c.id }}">{{ c.label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <a class="nav-link" href="{{ item.href }}" data-sec="{{ item.id }}">{{ item.label }}</a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="lang">
+      <button class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langMenu" aria-label="{{ ui.choose_language }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18"/></svg>
+        <span class="lang-label">Language</span>
+      </button>
+      <ul class="lang-menu" id="langMenu" hidden>
+        {% for l in lang_links %}<li><a href="{{ l.href }}" hreflang="{{ l.code }}" lang="{{ l.code }}"{% if l.current %} aria-current="true"{% endif %}>{{ l.label }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <button class="burger" id="burger" aria-label="{{ ui.menu_open }}" aria-expanded="false" aria-controls="nav"><span></span></button>
+  </div>
+</header>
+
+<div class="rail">
+  <div class="rail-track"></div>
+  <div class="rail-fill" id="railFill"></div>
+  <div id="railTicks"></div>
+</div>
+
+{% endif %}
+<main>
+{% if page == 'home' %}
+  {# ================= 首页：一把大折扇，每片扇叶是一个栏目（没有菜单栏） ================= #}
+  <section class="fan-home" id="intro">
+    <div class="lang home-lang">
+      <button class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false" aria-controls="langMenu" aria-label="{{ ui.choose_language }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18"/></svg>
+        <span class="lang-label">Language</span>
+      </button>
+      <ul class="lang-menu" id="langMenu" hidden>
+        {% for l in lang_links %}<li><a href="{{ l.href }}" hreflang="{{ l.code }}" lang="{{ l.code }}"{% if l.current %} aria-current="true"{% endif %}>{{ l.label }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <nav class="fan-nav" aria-label="{{ ui.main_menu }}">
+      <svg class="big-fan" id="bigFan" viewBox="0 0 1000 600" role="group" aria-label="{{ ui.main_menu }}">
+        <defs>
+          <radialGradient id="leafA" cx="{{ fan.cx }}" cy="{{ fan.cy }}" r="{{ fan.R }}" gradientUnits="userSpaceOnUse">
+            <stop offset=".35" stop-color="#a8823d"/><stop offset=".75" stop-color="#d8b874"/><stop offset="1" stop-color="#ead08f"/>
+          </radialGradient>
+          <radialGradient id="leafB" cx="{{ fan.cx }}" cy="{{ fan.cy }}" r="{{ fan.R }}" gradientUnits="userSpaceOnUse">
+            <stop offset=".35" stop-color="#94702f"/><stop offset=".75" stop-color="#c9a65f"/><stop offset="1" stop-color="#dcc07c"/>
+          </radialGradient>
+          <pattern id="leafCloud" width="130" height="130" patternUnits="userSpaceOnUse">
+            <image href="{{ static }}images/pattern-cloud.svg" width="130" height="130" opacity=".9"/>
+          </pattern>
+        </defs>
+        {# 扇骨（在扇叶下面，从扇轴伸出） #}
+        <g class="ribs">
+          {% for r in fan.ribs %}<g class="unfold" style="--r:{{ r.deg }}deg;--d:{{ r.delay }}ms"><line x1="{{ fan.cx }}" y1="{{ fan.cy }}" x2="{{ r.x }}" y2="{{ r.y }}" stroke-width="{{ r.w }}"/></g>
+          {% endfor %}
+        </g>
+        {% for leaf in fan.leaves %}
+        <a class="leaf" href="{{ leaf.href }}" style="--dx:{{ leaf.dx }}px;--dy:{{ leaf.dy }}px">
+          <g class="unfold" style="--r:{{ leaf.mid }}deg;--d:{{ leaf.delay }}ms">
+          <g class="leaf-body">
+            <path class="leaf-face" d="{{ leaf.d }}" fill="url(#leaf{{ 'B' if leaf.shade else 'A' }})"/>
+            <path class="leaf-cloud" d="{{ leaf.d }}" fill="url(#leafCloud)"/>
+            <path class="leaf-edge" d="{{ leaf.d }}"/>
+            <circle class="leaf-dot" cx="{{ leaf.ox }}" cy="{{ leaf.oy }}" r="5"/>
+            {% set t = leaf.text %}
+            {% if t.chars %}
+            <g class="leaf-label" style="font-size:{{ t.fs }}px" aria-label="{{ leaf.label }}">
+              {% for c in t.chars %}<text x="{{ c.x }}" y="{{ c.y }}" transform="rotate({{ c.rot }} {{ c.x }} {{ c.y }})">{{ c.ch }}</text>{% endfor %}
+            </g>
+            {% else %}
+            <text class="leaf-label" x="{{ t.x }}" y="{{ t.y }}" style="font-size:{{ t.fs }}px" transform="rotate({{ t.rot }} {{ t.x }} {{ t.y }})">{{ leaf.label }}</text>
+            {% endif %}
+          </g>
+          </g>
+        </a>
+        {% endfor %}
+        <circle class="rivet" cx="{{ fan.cx }}" cy="{{ fan.cy }}" r="13"/>
+        <circle class="rivet-in" cx="{{ fan.cx }}" cy="{{ fan.cy }}" r="5"/>
+      </svg>
+    </nav>
+    <div class="home-title hero">
+      <p class="hero-mark">{{ brand.est }}</p>
+      <h1><span class="latin">{{ brand.wordmark }}</span><span class="name">{{ brand.name }}</span></h1>
+      <p class="hero-sub">{{ brand.tagline }}</p>
+      <p class="fan-hint">{{ ui.fan_hint }}</p>
+    </div>
+  </section>
+
+{% elif page == 'story' %}
+  <section class="band" id="story" data-label="{{ menu_labels.story }}">
+    {{ backdrop('story') }}
+    <div class="inner">
+      {{ head(story.eyebrow, story.title) }}
+      {{ prose(story) }}
+      {% if story.charity %}
+      <div class="giving">
+        <h3 class="giving-title">{{ story.charity_title }}</h3>
+        <p class="giving-intro">{{ story.charity_intro }}</p>
+        <ul class="giving-list">
+          {% for c in story.charity %}<li><strong>{{ c.title }}</strong><span>{{ c.text }}</span></li>
+          {% endfor %}
+        </ul>
+        {% if story.charity_note %}<p class="ph-note">{{ story.charity_note }}</p>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+{% elif page == 'craft' %}
+  <section class="band" id="craft" data-label="{{ menu_labels.craft }}">
+    {{ backdrop('craft') }}
+    <div class="inner">
+      {{ head(craft.eyebrow, craft.title) }}
+      {{ prose(craft) }}
+    </div>
+  </section>
+
+{% elif page == 'news' %}
+  <section class="band" id="news" data-label="{{ menu_labels.news }}">
+    {{ backdrop('news') }}
+    <div class="inner">
+      {{ head(news_section.eyebrow, news_section.title) }}
+      <div class="cards">
+        {% for n in news %}{{ post_card(n, n.title, n.summary, news_section.read_more, ui.news_photo) }}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+{% elif page == 'themes' %}
+  <section class="band" id="themes" data-label="{{ menu_labels.themes }}">
+    {{ backdrop('themes') }}
+    <div class="inner">
+      {{ head(themes_section.eyebrow, themes_section.title) }}
+      <div class="cards">
+        {% for t in themes %}{{ post_card(t, t.title, t.summary, themes_section.button, ui.theme_photo) }}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+{% elif page == 'contact' %}
+  <section class="band" id="contact" data-label="{{ menu_labels.contact }}">
+    {{ backdrop('contact') }}
+    <div class="inner">
+      {{ head(contact_section.eyebrow, contact_section.title) }}
+      <div class="contact-box">
+        <dl>
+          {% for c in contacts %}
+          <dt>{{ c.label }}</dt>
+          <dd>
+            {% if c.value and c.link %}<a href="{{ c.link }}" target="_blank" rel="noopener">{{ c.value }}</a>
+            {% elif c.value %}{{ c.value }}
+            {% else %}<span class="todo">{{ ui.todo }}</span>{% endif %}
+          </dd>
+          {% endfor %}
+        </dl>
+      </div>
+    </div>
+  </section>
+
+{% elif page == 'fans' %}
+  {# ================= 宫廷折扇页 ================= #}
+  {% for sec in fans_sections %}
+  {% if sec == 'history' %}
+  <section class="band" id="history" data-label="{{ menu_labels.history }}">
+    {{ backdrop('history') }}
+    <div class="inner">
+      {{ head(history.eyebrow, history.title) }}
+      {{ prose(history) }}
+    </div>
+  </section>
+  {% elif sec == 'masters' %}
+  <section class="band" id="masters" data-label="{{ menu_labels.masters }}">
+    {{ backdrop('masters') }}
+    <div class="inner">
+      {{ head(masters_section.eyebrow, masters_section.title, masters_href, masters_section.all_button) }}
+      <div class="cards">
+        {% for m in masters %}{{ master_card(m) }}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% elif sec == 'categories' %}
+  <section class="band" id="categories" data-label="{{ menu_labels.categories }}">
+    {{ backdrop('categories') }}
+    <div class="inner">
+      {{ head(categories_section.eyebrow, categories_section.title, collections_href, categories_section.all_button) }}
+      <div class="cards">
+        {% for c in categories %}{{ category_card(c) }}
+        {% endfor %}
+      </div>
+      {% if categories_section.note %}<p class="ex-note">{{ categories_section.note }}</p>{% endif %}
+    </div>
+  </section>
+  {% elif sec == 'showcase' %}
+  <!-- 折扇展示：大图轮播 -->
+  <section class="band showcase" id="showcase" data-label="{{ menu_labels.showcase }}">
+    <div class="gallery" id="gallery" data-seconds="{{ showcase_seconds }}" tabindex="0" aria-roledescription="carousel" aria-label="{{ showcase_section.title }}">
+      <div class="stage" id="stage">
+        {% for f in showcase %}
+        <figure class="slide{% if loop.first %} is-active{% endif %}" aria-hidden="{{ 'false' if loop.first else 'true' }}">
+          <img src="{{ static }}images/{{ f.image }}" alt="{{ f.name }}" decoding="async"{% if loop.index > 2 %} loading="lazy"{% endif %}>
+        </figure>
+        {% endfor %}
+        <button class="g-arrow g-prev" type="button" aria-label="{{ ui.prev }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+        <button class="g-arrow g-next" type="button" aria-label="{{ ui.next }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+        <div class="loupe" id="loupe" aria-hidden="true"></div>
+        <div class="g-bar" aria-hidden="true"><span id="gBar"></span></div>
+      </div>
+      <aside class="g-info" aria-live="polite">
+        <div class="g-head">
+          <span class="eyebrow">{{ showcase_section.eyebrow }}</span>
+          <span class="g-count"><b id="gCur">01</b> / {{ '%02d' % showcase|length }}</span>
+        </div>
+        {% for f in showcase %}
+        <div class="g-card{% if loop.first %} is-active{% endif %}"{% if not loop.first %} hidden{% endif %}>
+          <h2 class="g-name">{{ f.name }}</h2>
+          <dl class="g-meta"><dt>{{ showcase_section.master }}</dt><dd>{% if f.master_name %}{{ f.master_name }}{% else %}<span class="todo">{{ ui.todo }}</span>{% endif %}</dd></dl>
+          <p class="g-intro">{{ f.intro }}</p>
+          <dl class="g-meta"><dt>{{ showcase_section.price }}</dt><dd>{% if f.price %}{{ f.price }}{% else %}<span class="todo">{{ ui.todo }}</span>{% endif %}</dd></dl>
+          <div class="g-actions">
+            <button class="btn btn-ghost" type="button">{{ showcase_section.detail }}</button>
+            <button class="btn btn-primary" type="button">{{ showcase_section.custom }} <span class="arr" aria-hidden="true">→</span></button>
+          </div>
+        </div>
+        {% endfor %}
+      </aside>
+    </div>
+  </section>
+  {% endif %}
+  {% endfor %}
+
+{% else %}
+  {# ================= 列表页：所有大师 / 所有扇子类型 ================= #}
+  {% if page == 'masters' %}{% set sec = masters_section %}{% set back = fans_href ~ '#masters' %}{% set back_text = ui.back_fans %}
+  {% else %}{% set sec = categories_section %}{% set back = fans_href ~ '#categories' %}{% set back_text = ui.back_fans %}{% endif %}
+  <section class="band list-page" id="all-{{ page }}">
+    <div class="inner">
+      <a class="back-link" href="{{ back }}"><span aria-hidden="true">←</span> {{ back_text }}</a>
+      <div class="sec-head"><span class="eyebrow">{{ sec.eyebrow }}</span><h1 class="list-title">{{ sec.all_title }}</h1></div>
+      <div class="cards">
+        {% if page == 'masters' %}{% for m in masters %}{{ master_card(m) }}
+        {% endfor %}{% else %}{% for c in categories %}{{ category_card(c) }}
+        {% endfor %}{% endif %}
+      </div>
+      {% if page == 'collections' and categories_section.note %}<p class="ex-note">{{ categories_section.note }}</p>{% endif %}
+    </div>
+  </section>
+{% endif %}
+</main>
+
+{% if page != 'home' %}<footer>{{ brand.footer }}</footer>{% endif %}
+
+<script src="{{ static }}js/main.js"></script>
+</body>
+</html>

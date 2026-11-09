@@ -1,0 +1,12 @@
+# 这些文件在每个人的电脑上自动生成，不上传到 GitHub
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# 系统和编辑器自动生成的文件
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

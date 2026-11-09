@@ -1,0 +1,381 @@
+/* Palace1689 — 宫廷紫底 + 暗金云纹；所有文字用宋体/明朝体一类的衬线字体。
+   Layout: fixed header with a Court Fans dropdown, full-width sections on one patterned ground,
+   progress rail on the right edge, a full-height fan gallery at the end of the Court Fans page.
+   颜色等 logo 定稿后，只需改下面 :root 里的几个色值。 */
+:root{
+  --plum-900:#1f0d21;          /* 最深的紫，用于阴影和画廊底 */
+  --plum-800:#2b152a;          /* 深紫：页面边缘 */
+  --plum-700:#3d1f40;          /* 宫廷紫：主底色 */
+  --plum-600:#58335a;          /* 亮一点的紫：中心光 */
+  --plum-500:#744b76;          /* 取自上传缎面图的亮部 */
+  --gold:#c9a35a;              /* 暗金：标题小字、边框、按钮 */
+  --gold-soft:#e0c487;         /* 浅金：悬停 */
+  --ink:#f3e9d6;               /* 象牙白：正文 */
+  --muted:#cdb9c9;             /* 淡紫灰：次要文字 */
+  --line:rgba(201,163,90,.26); /* 金色细线 */
+  --panel:rgba(31,13,33,.55);  /* 卡片底：半透明深紫 */
+  --panel-solid:#2a1430;
+  --header:rgba(38,17,40,.92);
+  --f-latin:"Cinzel","Trajan Pro","Times New Roman",serif;
+  /* --f-serif 由模板按语言设置（宋体 / 明朝体 / Garamond） */
+  --f-serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --head-h:64px;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--plum-800)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;color:var(--ink);font-family:var(--f-serif);font-size:16.5px;line-height:1.8;font-weight:400;
+  background-color:var(--plum-700);
+  background-image:url("../images/pattern-cloud.svg"),
+    radial-gradient(120% 70% at 50% 0%,var(--plum-600) 0%,transparent 60%),
+    linear-gradient(180deg,var(--plum-700),var(--plum-800));
+  background-size:260px 260px,100% 100%,100% 100%;
+  background-attachment:fixed,fixed,fixed;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--header)}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px}
+::selection{background:var(--gold);color:var(--plum-900)}
+
+/* ---------- header ---------- */
+.site-head{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;height:var(--head-h);
+  background:var(--header);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.head-in{height:100%;max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:20px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(24px,calc(env(safe-area-inset-right,0px) + 16px))}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+.logo-ph{width:38px;height:38px;border-radius:50%;border:1px dashed var(--gold);display:grid;place-items:center;
+  font:600 9px/1 var(--f-latin);letter-spacing:.08em;color:var(--gold)}
+.wordmark{font:600 17px/1 var(--f-latin);letter-spacing:.12em;color:var(--ink)}
+
+.nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+.nav-link,.submenu a{position:relative;text-decoration:none;white-space:nowrap;transition:color .2s,background .2s}
+.nav-link{font-size:15px;padding:8px 12px;color:var(--muted);letter-spacing:.06em}
+.nav-link:hover{color:var(--ink)}
+.nav-link::after{content:"";position:absolute;left:12px;right:12px;bottom:2px;height:1px;background:var(--gold);
+  transform:scaleX(0);transition:transform .25s}
+.nav-link.is-active{color:var(--gold-soft)}
+.nav-link.is-active::after{transform:scaleX(1)}
+
+/* 宫廷折扇：鼠标移上去向下展开子菜单 */
+.nav-group{position:relative;display:flex;align-items:center}
+.nav-group > .nav-link{padding-right:4px}
+.nav-group > .nav-link::after{right:4px}
+.sub-toggle{width:24px;height:30px;display:grid;place-items:center;border:0;background:transparent;color:var(--muted);cursor:pointer;padding:0}
+.sub-toggle svg{width:12px;height:12px;transition:transform .25s}
+.nav-group:hover .sub-toggle svg,.nav-group.open .sub-toggle svg{transform:rotate(180deg)}
+.submenu{position:absolute;left:0;top:calc(100% + 6px);min-width:200px;padding:8px;display:flex;flex-direction:column;
+  background:var(--panel-solid);border:1px solid var(--line);border-top:2px solid var(--gold);box-shadow:0 18px 40px rgba(0,0,0,.4);
+  opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s,transform .2s,visibility .2s}
+.submenu::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px}   /* 鼠标从标题移到菜单时不断开 */
+.nav-group:hover .submenu,.nav-group:focus-within .submenu,.nav-group.open .submenu{opacity:1;visibility:visible;transform:none}
+.submenu a{display:block;padding:9px 14px;font-size:14.5px;color:var(--muted);letter-spacing:.05em}
+.submenu a:hover{color:var(--ink);background:rgba(201,163,90,.12)}
+.submenu a.is-active{color:var(--gold-soft)}
+
+.lang{position:relative;flex:none}
+.lang-btn{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:18px;
+  background:transparent;color:var(--ink);font:500 13.5px var(--f-serif);cursor:pointer;transition:border-color .2s,background .2s}
+.lang-btn:hover{border-color:var(--gold);background:rgba(201,163,90,.1)}
+.lang-btn svg{width:16px;height:16px}
+.lang-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:160px;margin:0;padding:6px;list-style:none;
+  background:var(--panel-solid);border:1px solid var(--line);border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.lang-menu a{width:100%;padding:8px 12px;border-radius:6px;color:var(--ink);text-decoration:none;
+  font-size:14px;display:flex;justify-content:space-between;gap:16px;cursor:pointer}
+.lang-menu a:hover{background:rgba(201,163,90,.12)}
+.lang-menu a[aria-current="true"]{color:var(--gold-soft)}
+.lang-menu a[aria-current="true"]::after{content:"✓"}
+
+.burger{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:8px;background:transparent;
+  color:var(--ink);cursor:pointer;flex:none;place-items:center}
+.burger span,.burger span::before,.burger span::after{display:block;width:18px;height:1.5px;background:currentColor;position:relative;transition:transform .25s,opacity .2s}
+.burger span::before,.burger span::after{content:"";position:absolute;left:0}
+.burger span::before{top:-6px}.burger span::after{top:6px}
+.burger[aria-expanded="true"] span{background:transparent}
+.burger[aria-expanded="true"] span::before{transform:translateY(6px) rotate(45deg)}
+.burger[aria-expanded="true"] span::after{transform:translateY(-6px) rotate(-45deg)}
+
+@media (max-width:1200px){
+  .burger{display:grid;order:3}
+  .lang{margin-left:auto}
+  .nav{position:fixed;left:0;right:0;top:calc(var(--head-h) + env(safe-area-inset-top,0px));margin:0;flex-direction:column;align-items:stretch;gap:0;
+    max-height:calc(100vh - var(--head-h));overflow-y:auto;
+    background:var(--panel-solid);border-bottom:1px solid var(--line);box-shadow:0 18px 30px rgba(0,0,0,.4);
+    padding:8px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+  .nav:not(.open){display:none}
+  .nav-link{font-size:16.5px;padding:14px 8px;border-bottom:1px solid var(--line)}
+  .nav-link::after{left:0;right:auto;top:14px;bottom:14px;width:2px;height:auto;transform:scaleY(0)}
+  .nav-link.is-active{padding-left:16px}
+  .nav-link.is-active::after{transform:scaleY(1)}
+  /* 手机菜单里，宫廷折扇的子项直接列出来 */
+  .nav-group{flex-direction:column;align-items:stretch}
+  .nav-group > .nav-link{padding-right:8px}
+  .sub-toggle{display:none}
+  .submenu{position:static;opacity:1;visibility:visible;transform:none;box-shadow:none;border:0;background:transparent;
+    padding:0 0 6px 18px;min-width:0}
+  .submenu::before{display:none}
+  .submenu a{padding:11px 8px;font-size:15px;border-bottom:1px dashed var(--line)}
+  .wordmark{font-size:15px}
+}
+
+/* ---------- progress rail ---------- */
+.rail{position:fixed;z-index:40;right:env(safe-area-inset-right,0px);top:calc(var(--head-h) + env(safe-area-inset-top,0px));
+  bottom:env(safe-area-inset-bottom,0px);width:10px;display:flex;justify-content:center}
+.rail-track{position:absolute;top:0;bottom:0;width:3px;background:rgba(201,163,90,.18);border-radius:2px}
+.rail-fill{position:absolute;top:0;bottom:0;width:3px;background:linear-gradient(var(--gold-soft),var(--gold));border-radius:2px;
+  transform-origin:top;transform:scaleY(0);transition:transform .12s linear}
+.rail-tick{position:absolute;left:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;padding:0;border:1.5px solid var(--line);
+  background:var(--plum-800);cursor:pointer;transition:border-color .2s,background .2s,transform .2s}
+.rail-tick:hover{transform:scale(1.3)}
+.rail-tick.passed{border-color:var(--gold)}
+.rail-tick.is-active{background:var(--gold-soft);border-color:var(--gold-soft)}
+@media (max-width:640px){.rail{width:8px}.rail-tick{width:8px;height:8px;margin:-4px 0 0 -4px}}
+
+/* ---------- sections ---------- */
+.band{position:relative;scroll-margin-top:var(--head-h);min-height:82vh;display:flex;align-items:center;overflow:hidden;
+  border-bottom:1px solid var(--line)}
+.band > .bg{position:absolute;inset:0;z-index:0}
+.bg.has-img{background-size:cover;background-position:center;opacity:.55}
+.inner{position:relative;z-index:1;width:100%;max-width:1180px;margin:0 auto;padding-block:88px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(28px,calc(env(safe-area-inset-right,0px) + 20px))}
+.sec-head{text-align:center;margin-bottom:44px}
+.eyebrow{display:block;font:600 12px var(--f-latin);letter-spacing:.32em;color:var(--gold);margin-bottom:10px}
+.sec-head h2,.sec-head .list-title{margin:0;font:700 clamp(28px,4.2vw,42px)/1.25 var(--f-serif);letter-spacing:.08em;text-wrap:balance;color:var(--ink)}
+.sec-head h2::after,.sec-head .list-title::after{content:"";display:block;width:64px;height:1px;margin:18px auto 0;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.sec-head.with-link{display:grid;grid-template-columns:1fr auto 1fr;column-gap:20px}
+.sec-head.with-link > .title{grid-column:2}
+.sec-head.with-link > .btn{grid-column:3;justify-self:end;align-self:end;margin-bottom:22px}
+
+/* ---------- hero ---------- */
+.hero .inner{text-align:center;padding-block:56px 64px}
+.fan{width:min(520px,92%);height:auto;display:block;margin:0 auto 8px;overflow:visible;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
+.pleat{transform-origin:260px 280px;transform:rotate(0deg);transition:transform 1.5s cubic-bezier(.2,.75,.2,1)}
+.fan.open .pleat{transform:rotate(var(--r))}
+@media (prefers-reduced-motion:reduce){.pleat{transition:none}}
+.hero-mark{font:500 clamp(15px,1.9vw,18px)/1.4 var(--f-serif);letter-spacing:.3em;padding-left:.3em;color:var(--gold);margin:8px 0 14px;text-wrap:balance}
+.hero h1{margin:0;font:900 clamp(44px,8vw,86px)/1.1 var(--f-serif);letter-spacing:.14em;padding-left:.14em;color:var(--ink)}
+.hero h1 .latin{display:block;font:600 clamp(22px,3.4vw,34px)/1.2 var(--f-latin);letter-spacing:.2em;margin-bottom:10px;color:var(--gold-soft)}
+.hero h1 .name{display:block;text-wrap:balance}
+.hero-sub{margin:18px auto 0;color:var(--muted);font-size:16px;letter-spacing:.18em}
+
+/* ---------- long text ---------- */
+.prose{max-width:40em;margin:0 auto;padding:36px clamp(20px,4vw,48px);background:var(--panel);border:1px solid var(--line)}
+.prose p{margin:0 0 1.1em}
+.prose p:last-child{margin-bottom:0}
+.ph-note{font-size:13.5px;color:var(--muted);letter-spacing:.06em}
+
+/* ---------- giving (inside story) ---------- */
+.giving{max-width:40em;margin:24px auto 0;padding:32px clamp(20px,4vw,48px);background:var(--panel);border:1px solid var(--line);
+  border-top:2px solid var(--gold)}
+.giving-title{margin:0 0 8px;font:700 22px/1.35 var(--f-serif);letter-spacing:.06em;color:var(--gold-soft)}
+.giving-intro{margin:0 0 20px}
+.giving-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 28px}
+.giving-list li{min-width:0;display:flex;flex-direction:column;gap:4px;padding-left:14px;border-left:1px solid var(--gold)}
+.giving-list strong{font:700 16px/1.5 var(--f-serif);color:var(--ink)}
+.giving-list span{color:var(--muted);font-size:15px;line-height:1.75}
+.giving .ph-note{margin:22px 0 0}
+@media (max-width:640px){.giving-list{grid-template-columns:1fr}}
+
+/* ---------- cards: four per row ---------- */
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+@media (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.cards{grid-template-columns:1fr}}
+.card{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:32px 22px 26px;
+  background:var(--panel);border:1px solid var(--line);transition:border-color .25s,transform .25s,background .25s}
+.card:hover{border-color:var(--gold);transform:translateY(-3px);background:rgba(31,13,33,.72)}
+.photo{width:128px;height:128px;border-radius:50%;display:grid;place-items:center;flex:none;overflow:hidden;
+  border:1px solid var(--gold);outline:1px solid var(--line);outline-offset:6px;margin-bottom:10px;
+  background:repeating-linear-gradient(135deg,rgba(201,163,90,.08) 0 8px,rgba(201,163,90,.02) 8px 16px);color:var(--muted);font-size:13.5px}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.card .role{font:600 11px var(--f-latin);letter-spacing:.24em;color:var(--gold)}
+.card h3{margin:0;font:700 21px/1.35 var(--f-serif);letter-spacing:.08em;color:var(--ink)}
+.card p{margin:0;color:var(--muted);font-size:15px;line-height:1.75;flex:1}
+.actions{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:8px}
+
+.post-card{min-width:0;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+  transition:border-color .25s,transform .25s}
+.post-card:hover{border-color:var(--gold);transform:translateY(-3px)}
+.post-photo{aspect-ratio:3/2;max-width:100%;display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:13.5px;
+  border-bottom:1px solid var(--line);background:repeating-linear-gradient(135deg,rgba(201,163,90,.08) 0 8px,rgba(201,163,90,.02) 8px 16px)}
+.post-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.post-body{flex:1;display:flex;flex-direction:column;gap:10px;padding:20px 20px 22px}
+.post-body h3{margin:0;font:700 18.5px/1.45 var(--f-serif);letter-spacing:.03em;text-wrap:balance;color:var(--ink)}
+.post-body p{margin:0;flex:1;color:var(--muted);font-size:15px;line-height:1.75}
+.post-body .btn{align-self:flex-start;margin-top:6px;min-height:40px;padding:0 16px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:2px;
+  font:500 15px var(--f-serif);letter-spacing:.12em;cursor:pointer;text-decoration:none;text-align:center;
+  transition:background .25s,color .25s,border-color .25s,box-shadow .25s,transform .15s}
+.btn .arr{display:inline-block;transition:transform .25s}
+.btn:active{transform:translateY(1px)}
+.btn:hover .arr{transform:translateX(4px)}
+.btn-primary{background:var(--gold);color:var(--plum-900);border:1px solid var(--gold);font-weight:600}
+.btn-primary:hover{background:var(--gold-soft);border-color:var(--gold-soft);box-shadow:0 8px 22px rgba(201,163,90,.3)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--gold);background:rgba(201,163,90,.14);color:var(--gold-soft)}
+.btn-sm{min-height:38px;padding:0 16px;font-size:14px;letter-spacing:.1em;background:rgba(31,13,33,.5)}
+.ex-note{text-align:center;color:var(--muted);font-size:13.5px;margin-top:22px}
+
+/* ---------- contact ---------- */
+.contact-box{max-width:620px;margin:0 auto;background:var(--panel);border:1px solid var(--line);padding:12px clamp(20px,4vw,40px)}
+.contact-box dl{margin:0;display:grid;grid-template-columns:max-content 1fr;column-gap:28px}
+.contact-box dt,.contact-box dd{margin:0;padding:15px 0;border-bottom:1px solid var(--line)}
+.contact-box dl > :nth-last-child(-n+2){border-bottom:0}
+.contact-box dt{color:var(--muted);font-size:15px;letter-spacing:.08em}
+.contact-box dd{min-width:0;overflow-wrap:anywhere}
+.todo{color:var(--muted);border-bottom:1px dashed var(--muted);font-size:14.5px}
+
+/* ---------- list pages ---------- */
+.list-page{align-items:flex-start}
+.list-page .inner{padding-block:56px 72px}
+.back-link{display:inline-flex;align-items:center;gap:8px;margin-bottom:28px;color:var(--muted);text-decoration:none;
+  font-size:15px;letter-spacing:.06em;padding:6px 0;transition:color .2s}
+.back-link span{transition:transform .25s}
+.back-link:hover{color:var(--gold-soft)}
+.back-link:hover span{transform:translateX(-4px)}
+
+/* ---------- fan gallery (折扇展示) ---------- */
+.showcase{min-height:calc(100vh - var(--head-h));align-items:stretch;border-bottom:0}
+.gallery{position:relative;z-index:1;width:100%;display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,26vw,380px);
+  height:calc(100vh - var(--head-h));min-height:560px;outline:none}
+.stage{position:relative;overflow:hidden;background:var(--plum-900);
+  /* 鼠标在折扇图上变成古典放大镜；18 18 是镜片中心，正对放大的位置 */
+  cursor:url("../images/cursor-magnifier.svg") 18 18,zoom-in}
+.stage .g-arrow{cursor:pointer}
+.slide{position:absolute;inset:0;margin:0;opacity:0;transition:opacity .7s ease}
+.slide.is-active{opacity:1}
+.slide img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
+.g-arrow{position:absolute;top:50%;z-index:3;width:52px;height:52px;margin-top:-26px;display:grid;place-items:center;border-radius:50%;
+  border:1px solid rgba(243,233,214,.45);background:rgba(31,13,33,.5);color:var(--ink);cursor:pointer;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:background .2s,border-color .2s,transform .2s}
+.g-arrow svg{width:22px;height:22px}
+.g-arrow:hover{background:var(--gold);border-color:var(--gold);color:var(--plum-900);transform:scale(1.06)}
+.g-prev{left:20px}.g-next{right:20px}
+.g-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(243,233,214,.15);z-index:3}
+.g-bar span{display:block;height:100%;width:100%;background:var(--gold);transform-origin:left;transform:scaleX(0)}
+/* 放大镜：跟着鼠标的小圆框 */
+.loupe{position:absolute;z-index:4;width:200px;height:200px;border-radius:50%;pointer-events:none;
+  border:2px solid var(--gold-soft);box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 0 0 4px rgba(31,13,33,.35);
+  background-repeat:no-repeat;background-color:var(--plum-900);opacity:0;transform:scale(.85);transition:opacity .15s,transform .15s}
+.loupe.on{opacity:1;transform:scale(1)}
+.g-info{position:relative;display:flex;flex-direction:column;padding:40px 32px 36px;background:var(--panel-solid);
+  border-left:1px solid var(--line);overflow-y:auto}
+.g-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:26px}
+.g-head .eyebrow{margin:0}
+.g-count{font:500 14px var(--f-latin);letter-spacing:.12em;color:var(--muted)}
+.g-count b{color:var(--gold-soft);font-weight:600}
+.g-card{flex:1;display:flex;flex-direction:column;gap:18px;animation:gIn .6s ease both}
+@keyframes gIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide{transition:none}.g-card{animation:none}}
+.g-name{margin:0;font:700 clamp(24px,2.2vw,30px)/1.3 var(--f-serif);letter-spacing:.08em;color:var(--ink);text-wrap:balance}
+.g-meta{margin:0;display:grid;gap:4px}
+.g-meta dt{font-size:13.5px;letter-spacing:.14em;color:var(--gold)}
+.g-meta dd{margin:0;font-size:17px}
+.g-intro{margin:0;color:var(--muted);font-size:15.5px;line-height:1.85}
+.g-actions{margin-top:auto;display:grid;gap:10px;padding-top:12px}
+@media (max-width:900px){
+  .showcase{min-height:0}
+  .gallery{grid-template-columns:1fr;height:auto;min-height:0}
+  .stage{aspect-ratio:4/3;cursor:default}
+  .g-info{border-left:0;border-top:1px solid var(--line);padding:24px 20px 28px}
+  .g-actions{grid-template-columns:1fr 1fr}
+  .g-arrow{width:44px;height:44px;margin-top:-22px}
+  .g-prev{left:12px}.g-next{right:12px}
+  .loupe{display:none}
+}
+
+/* ---------- footer ---------- */
+footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;color:var(--muted);font-size:14px;letter-spacing:.08em;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:rgba(31,13,33,.6);border-top:1px solid var(--line)}
+
+@media (max-width:640px){
+  .band{min-height:auto}
+  .inner{padding-block:64px 52px}
+  .sec-head{margin-bottom:32px}
+  .sec-head.with-link{grid-template-columns:1fr;row-gap:18px}
+  .sec-head.with-link > .title,.sec-head.with-link > .btn{grid-column:1}
+  .sec-head.with-link > .btn{justify-self:center;margin-bottom:0}
+  .list-page .inner{padding-block:40px 52px}
+}
+
+/* ---------- fan-opening transition (折扇开场) ---------- */
+/* 幕布：纯黑，盖住整个页面，脚本按扇形一折一折剪开 */
+#fanveil{position:fixed;inset:0;z-index:100;background:#000}   /* 还没打开的部分：纯黑 */
+html.veiled{overflow:hidden}
+
+/* ---------- per-language typography ---------- */
+/* 西文：EB Garamond 字面偏小，正文放大一点；不要中文式的大字距 */
+html:is([lang="en"],[lang="es"],[lang="fr"]) body{font-size:18.5px;line-height:1.7}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .hero h1{font-size:clamp(36px,6vw,68px);letter-spacing:.01em;padding-left:0;line-height:1.15;font-weight:600}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .hero h1 .latin{letter-spacing:.16em}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .hero-mark{font-family:var(--f-latin);font-size:clamp(13px,1.5vw,15px);letter-spacing:.24em;padding-left:.24em}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .hero-sub{letter-spacing:.04em;font-style:italic;font-size:19px}
+html:is([lang="en"],[lang="es"],[lang="fr"]) :is(.sec-head h2,.sec-head .list-title){letter-spacing:.01em;font-weight:600}
+html:is([lang="en"],[lang="es"],[lang="fr"]) :is(.card h3,.post-body h3,.giving-title,.g-name){letter-spacing:0;font-weight:600}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .card h3{font-size:22px}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .post-body h3{font-size:20.5px}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .btn{letter-spacing:.03em;font-size:16.5px;padding:0 14px}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .nav-link{font-size:16.5px;letter-spacing:.01em;padding-inline:10px}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .submenu a{font-size:16px;letter-spacing:0}
+html:is([lang="en"],[lang="es"],[lang="fr"]) :is(.contact-box dt,.g-meta dt){letter-spacing:.04em}
+html:is([lang="en"],[lang="es"],[lang="fr"]) :is(.card p,.post-body p,.giving-list span,.g-intro){font-size:17px}
+html:is([lang="ja"],[lang="ko"]) .hero h1{letter-spacing:.08em;padding-left:.08em}
+html[lang="ko"] body{word-break:keep-all}
+
+/* ---------- 首页：一把大折扇，每片扇叶是一个栏目（没有菜单栏） ---------- */
+.fan-home{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding-block:max(56px,env(safe-area-inset-top,0px)) 36px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.home-lang{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));right:max(20px,calc(env(safe-area-inset-right,0px) + 16px));z-index:5}
+.fan-nav{width:min(1040px,100%,calc((100vh - 290px) * 1.667));min-width:min(100%,340px)}
+.big-fan{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 24px 40px rgba(0,0,0,.45))}
+.big-fan .ribs line{stroke:#7a4a28;stroke-linecap:round}
+.leaf{cursor:pointer;outline:none}
+/* 首页大折扇：一开始所有扇骨、扇叶都收在正中（闭合），然后从左到右依次转到自己的位置（打开） */
+.big-fan .unfold{transform-origin:500px 560px;transform:rotate(calc(-1 * var(--r)));
+  transition:transform 1.5s cubic-bezier(.2,.75,.2,1) var(--d)}
+.big-fan.open .unfold{transform:rotate(0deg)}
+.big-fan:not(.opened) .leaf{pointer-events:none}
+@media (prefers-reduced-motion:reduce){.big-fan .unfold{transition:none}}
+.leaf-body{transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s}
+.leaf:hover .leaf-body,.leaf:focus-visible .leaf-body{transform:translate(var(--dx),var(--dy));
+  filter:brightness(1.12) drop-shadow(0 0 16px rgba(224,196,135,.5))}
+.leaf-cloud{opacity:.32;pointer-events:none}
+.leaf-edge{fill:none;stroke:rgba(90,52,20,.55);stroke-width:1.5}
+.leaf:focus-visible .leaf-edge{stroke:#fff6dc;stroke-width:3}
+.leaf-dot{fill:#4a2443;transition:fill .3s}
+.leaf:hover .leaf-dot{fill:#8a2b20}
+.leaf-label{text-anchor:middle;dominant-baseline:central;font-family:var(--f-serif);font-weight:700;fill:#2b152a;pointer-events:none}
+.leaf-label text{text-anchor:middle;dominant-baseline:central}
+.rivet{fill:#2b152a;stroke:#e0c487;stroke-width:4}
+.rivet-in{fill:#e0c487}
+.home-title{text-align:center;margin-top:10px}
+.home-title h1{font-size:clamp(30px,4.4vw,54px)}
+.home-title h1 .latin{font-size:clamp(16px,2vw,24px);margin-bottom:6px}
+.home-title .hero-mark{margin:0 0 10px}
+.home-title .hero-sub{margin-top:12px}
+.fan-hint{margin:16px 0 0;color:var(--muted);font-size:14px;letter-spacing:.24em;opacity:.85}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .leaf-label{letter-spacing:.03em;font-weight:600}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .home-title h1{font-size:clamp(28px,4vw,48px)}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .fan-hint{letter-spacing:.06em;font-style:italic;font-size:16px}
+@media (max-width:640px){
+  .fan-home{padding-top:84px}
+}
+@media (prefers-reduced-motion:reduce){.leaf-body{transition:none}}
+
+/* 正文：居中的标题、口号、结尾短句 */
+.prose-headline{margin:0 0 .3em;text-align:center;color:var(--gold-soft);font-size:clamp(20px,2.4vw,26px);font-weight:600;letter-spacing:.12em}
+.prose-motto{text-align:center;color:var(--gold);letter-spacing:.3em;margin:0 0 1.8em !important}
+.prose-headline + p:not(.prose-motto){margin-top:1.4em}
+.prose-pillars{margin:2em 0 1.4em;padding:1.2em 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}
+.prose-pillars p{margin:.35em 0 !important;color:var(--gold-soft);font-weight:500;letter-spacing:.06em}
+.prose-coda{text-align:center}
+.prose-closing{margin-top:1.8em !important;text-align:center;color:var(--gold-soft);font-size:1.15em;letter-spacing:.12em}
+html:is([lang="en"],[lang="es"],[lang="fr"]) .prose-motto,html:is([lang="en"],[lang="es"],[lang="fr"]) .prose-closing{letter-spacing:.04em;font-style:italic}
+html[lang="ko"] .prose-headline,html[lang="ko"] .prose-closing,html[lang="ko"] .prose-motto{letter-spacing:.03em}
